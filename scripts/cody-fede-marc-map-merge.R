@@ -7,7 +7,9 @@
 ###of RQTL and Onemap
 ################
 
+
 setwd("/Users/Cody_2/git.repos/brassica_genetic_map/input")
+if(Sys.getenv("USER") == "jmaloof") setwd("~/git/brassica_genetic_map/Input/")
 library(qtl)
 
 genotypes <- read.csv("B.rapa_RIL_GTs_fede_11_07.csv",na.strings=c("","-"))
@@ -95,10 +97,8 @@ merged_map_2 <- merged_map
 plotMap(merged_map)
 
 
-
-mn2_merged_map <- markernames(merged_map, chr="A02")
-mn2_merged_map
-
+mn1 <- markernames(merged_map, chr="A01")
+mn2 <- markernames(merged_map, chr="A02")
 mn3 <- markernames(merged_map, chr="A03")
 mn4 <- markernames(merged_map, chr="A04")
 mn5 <- markernames(merged_map, chr="A05")
@@ -108,18 +108,38 @@ mn8 <- markernames(merged_map, chr="A08")
 mn9 <- markernames(merged_map, chr="A09")
 mn10 <- markernames(merged_map, chr="A10")
 mn2
-plotMap(merged_map, chr = "A02", show.marker.names=TRUE)
 
-merged_map_3 <- merged_map_2
-merged_map_4 <- merged_map_2
+plotRF(merged_map_2,"A02")
+
+merged_map_3 <- merged_map_2 # I will create the new order here
+
 #drop markers on chromosome 2
-merged_map_3 <- drop.markers(merged_map_3, 
-	                     c("BRMS046","pX123bH", "fito338a", "pW130bX",
-	                       "pX139eH",  "pW208aH", "pX110cX", "fito378a",
-	                       "pW235aX", "pW250aH", "fito473",  "EZ3bH",   
-	                       "pW135aH",  "pX128bX", "pW205bH", "pW176aH",  
-	                       "pX107aX", "pW213aE", "pW249aX",  "pX124bX")) 
-plotMap(merged_map_3, chr = "A02", show.marker.names=TRUE)
+
+mn2_Fede <- grep("A02_",mn2,value=TRUE,invert=TRUE)
+
+for (m in 1:length(mn2_Fede)) {
+  print(mn2_Fede[m])
+  
+  merged_map_tmp <- drop.markers(merged_map_3, mn2_Fede[-m] ) #Drop all Fede Markers except for 1; pull from "new" map
+  
+  print(plotRF(merged_map_tmp,"A02",main=mn2_Fede[m]))
+  
+  tryall.tmp <- tryallpositions(merged_map_tmp,mn2_Fede[m],"A02",verbose = FALSE)
+  print(plot(tryall.tmp,main=mn2_Fede[m]))
+  print(summary(tryall.tmp))
+
+  if (summary(tryall.tmp)$lod > 3) {
+    merged_map_3 <- movemarker(merged_map_3,mn2_Fede[m],"A02",summary(tryall.tmp)$pos)
+  } else {
+    merged_map_3 <- drop.markers(merged_map_3,mn2_Fede[m])
+  }
+  plotMap(merged_map_3, chr = "A02", show.marker.names=TRUE)
+  
+  print("####################") 
+}
+
+
+
 
 merged_map_4 <- drop.markers(merged_map_4, 
 	                     c("fito529", "FLC2aE", "BRMS001",  "fito118b",
